@@ -82,7 +82,15 @@ namespace MinimalChessEngine
         //*****************
         //*** INTERNALS ***
         //*****************
+        private void StartSearchMTCS(int maxDepth, long maxNodes) 
+        {
+            //do the first iteration. it's cheap, no time check, no thread
+            Uci.Log($"Search scheduled to take {_time.TimePerMoveWithMargin}ms!");
+            _time.StartInterval();
+            _searching = new Thread(SearchMTCS) { Priority = ThreadPriority.Highest };
+            _searching.Start();
 
+        }
         private void StartSearch(int maxDepth, long maxNodes)
         {
             //do the first iteration. it's cheap, no time check, no thread
@@ -103,6 +111,29 @@ namespace MinimalChessEngine
             _searching.Start();
         }
 
+        private void SearchMTCS()
+        {
+            while (CanSearchDeeperMTCS())
+            {
+                _time.StartInterval();
+                _search.SearchDeeperMTCS(_time.CheckTimeBudget);
+
+                //aborted? NEED TO CHECK THIS FOR MTCS
+                if (_search.Aborted)
+                    break;
+
+                //collect PV
+                Collect();
+            }
+            //Done searching!
+            Uci.BestMove(_best);
+            _search = null;
+        }
+        private bool CanSearchDeeperMTCS()
+        {
+            //otherwise it's only time that can stop us!
+            return _time.CanSearchDeeper();
+        }
         private void Search()
         {
             while (CanSearchDeeper())
@@ -122,6 +153,7 @@ namespace MinimalChessEngine
             _search = null;
         }
 
+
         private bool CanSearchDeeper()
         {
             //max depth reached or game over?
@@ -131,7 +163,7 @@ namespace MinimalChessEngine
             //otherwise it's only time that can stop us!
             return _time.CanSearchDeeper();
         }
-
+        
         private void Collect()
         {
             _best = _search.PrincipalVariation[0];

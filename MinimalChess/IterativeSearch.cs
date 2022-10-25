@@ -45,7 +45,7 @@ namespace MinimalChess
             _killSwitch = new KillSwitch(killSwitch);
             (Score, PrincipalVariation) = EvalPosition(_root, 0, Depth, SearchWindow.Infinite);
         }
-
+        
         private void StorePVinTT(Move[] pv, int depth)
         {
             Board position = new Board(_root);
@@ -56,7 +56,22 @@ namespace MinimalChess
                 position.Play(move);
             }
         }
-
+        public void SearchDeeperMTCS(Func<bool> killSwitch = null)
+        {
+            StorePVinTtMTCS(PrincipalVariation, Depth);
+            _killSwitch = new KillSwitch(killSwitch);
+            (Score, PrincipalVariation) = EvalPosition(_root, 0, Depth, SearchWindow.Infinite);
+        }
+        private void StorePVinTtMTCS(Move[] pv, int depth)
+        {
+            Board position = new Board(_root);
+            for (int ply = 0; ply < pv.Length; ply++)
+            {
+                Move move = pv[ply];
+                Transpositions.Store(position.ZobristHash, --depth, ply, SearchWindow.Infinite, Score, move);
+                position.Play(move);
+            }
+        }
         private (int Score, Move[] PV) EvalPositionTT(Board position, int ply, int depth, SearchWindow window)
         {
             if (Transpositions.GetScore(position.ZobristHash, depth, ply, window, out int ttScore))
