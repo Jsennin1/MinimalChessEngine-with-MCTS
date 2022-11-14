@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
+using static System.Formats.Asn1.AsnWriter;
 
 
 namespace MinimalChess
@@ -7,43 +10,57 @@ namespace MinimalChess
     public class MonteCarloTreeSearch
     {
         static int WIN_SCORE = 10;
-        int level;
-        int opponent;
-
-        public Board findNextMove(Board board, int playerNo, int endTime)
+        Color opponent,player;
+        Tree tree;
+        Node rootNode;
+        int maxPlayOutCount = 300;
+        public MonteCarloTreeSearch(Board board)
+        {
+            player = board.SideToMove;
+            opponent = Pieces.Flip(board.SideToMove);
+            tree = new Tree();
+            rootNode = tree.getRoot();
+            rootNode.getState().setBoard(board);
+            rootNode.getState().setPlayerColor(opponent);
+        }
+        public Move ResultOfMTCStree()
         {
             // define an end time which will act as a terminating condition
 
-            opponent = 3 - playerNo;
-            Tree tree = new Tree();
-            Node rootNode = tree.getRoot();
-            rootNode.getState().setBoard(board);
-            rootNode.getState().setPlayerNo(opponent);
-
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
-            while (timer.Elapsed.TotalSeconds < endTime)
-            {
-                Node promisingNode = selectPromisingNode(rootNode);
-                if (promisingNode.getState().getBoard().checkStatus()
-                  == Board.IN_PROGRESS)
-                {
-                    expandNode(promisingNode);
-                }
-                Node nodeToExplore = promisingNode;
-                if (promisingNode.getChildArray().Count > 0)
-                {
-                    nodeToExplore = promisingNode.getRandomChildNode();
-                }
-                int playoutResult = simulateRandomPlayout(nodeToExplore);
-                backPropogation(nodeToExplore, playoutResult);
-            }
-            timer.Stop();
-
             Node winnerNode = rootNode.getChildWithMaxScore();
             tree.setRoot(winnerNode);
-            return winnerNode.getState().getBoard();
+            return winnerNode.getState().getMove();
         }
+
+        public void CreatingMCTStree()
+        {
+            Console.WriteLine("mcts");
+            Node promisingNode = selectPromisingNode(rootNode);
+            Console.WriteLine("mcts1");
+
+            if (promisingNode.getState().CheckStatus())
+            {
+                expandNode(promisingNode);
+                Console.WriteLine("mcts2");
+
+            }
+            Node nodeToExplore = promisingNode;
+            if (promisingNode.getChildArray().Count > 0)
+            {
+                Console.WriteLine("mcts3");
+
+                nodeToExplore = promisingNode.getRandomChildNode();
+            }
+            Console.WriteLine("mcts4");
+
+            Color playoutResult = simulateRandomPlayout(nodeToExplore);
+            Console.WriteLine("mcts5");
+
+            backPropogation(nodeToExplore, playoutResult);
+            Console.WriteLine("mcts6");
+
+        }
+
         private Node selectPromisingNode(Node rootNode)
         {
             Node node = rootNode;
@@ -61,42 +78,55 @@ namespace MinimalChess
                 Node newNode = new Node();
                 newNode.setState(state);
                 newNode.setParent(node);
-                newNode.getState().setPlayerNo(node.getState().getOpponent());
+                newNode.getState().setPlayerColor(node.getState().getOpponent());
                 node.getChildArray().Add(newNode);
             }
         }
-        private void backPropogation(Node nodeToExplore, int playerNo)
+        private void backPropogation(Node nodeToExplore, Color playercolor)
         {
             Node tempNode = nodeToExplore;
             while (tempNode != null)
             {
                 tempNode.getState().incrementVisit();
-                if (tempNode.getState().getPlayerNo() == playerNo)
+                if (tempNode.getState().getPlayerColor() == playercolor)
                 {
                     tempNode.getState().addScore(WIN_SCORE);
                 }
                 tempNode = tempNode.getParent();
             }
         }
-        private int simulateRandomPlayout(Node node)
+        //if player wins return 1, lose -1,draw 0
+        private Color simulateRandomPlayout(Node node)
         {
-            
+            int playoutCount= 0;
             Node tempNode = new Node();
             tempNode.copyStateOfNode(node);
             State tempState = tempNode.getState();
-            int boardStatus = tempState.getBoard().checkStatus();
-            if (boardStatus == opponent)
+            Color boardStatus = tempState.getBoard().SideToMove;
+            if (!tempState.CheckStatus() && boardStatus != player)
             {
                 tempNode.getParent().getState().setWinScore(int.MinValue);
-                return boardStatus;
+                return player;
             }
-            while (boardStatus == Board.IN_PROGRESS)
+            while (tempState.CheckStatus() && playoutCount < maxPlayOutCount)
             {
-                tempState.togglePlayer();
+                playoutCount++;
+                //tempState.togglePlayer();
                 tempState.randomPlay();
-                boardStatus = tempState.getBoard().checkStatus();
             }
-            return boardStatus;
+            //dusman hareket edemiyorsa draw olabilir
+            if(playoutCount < maxPlayOutCount)
+                return tempState.getBoard().SideToMove == player ? opponent : player;
+            int whitePoint=0, blackPoint =0;
+
+            (whitePoint, blackPoint) = tempState.getBoard().GiveTotalPiecePoints();
+            if (whitePoint == blackPoint)
+                return 0;
+            else if (whitePoint > blackPoint)
+                return player == Color.White ? player : opponent;
+            else
+                return player == Color.Black ? player : opponent;
+
         }
     }
 

@@ -67,6 +67,12 @@ namespace MinimalChessEngine
             _time.Go(maxTime, increment, movesToGo);
             StartSearch(maxDepth, maxNodes);
         }
+        internal void GoMTCS(int maxTime)
+        {
+            Stop();
+            _time.Go(maxTime);
+            StartSearchMTCS();
+        }
 
         public void Stop()
         {
@@ -82,7 +88,25 @@ namespace MinimalChessEngine
         //*****************
         //*** INTERNALS ***
         //*****************
-        private void StartSearchMTCS(int maxDepth, long maxNodes) 
+
+        private static void ListMoves(Board board, int depth)
+        {
+            IterativeSearch search = new IterativeSearch(depth, board);
+            Move[] line = search.PrincipalVariation;
+
+            int i = 1;
+            foreach (var move in new LegalMoves(board))
+            {
+                if (line != null && line.Length > 0 && line[0] == move)
+                {
+                    string pvString = string.Join(' ', line);
+                    Console.WriteLine($"{i++,4}. {pvString} = {search.Score:+0.00;-0.00}");
+                }
+                else
+                    Console.WriteLine($"{i++,4}. {move}");
+            }
+        }
+        private void StartSearchMTCS() 
         {
             //do the first iteration. it's cheap, no time check, no thread
             Uci.Log($"Search scheduled to take {_time.TimePerMoveWithMargin}ms!");
@@ -113,19 +137,26 @@ namespace MinimalChessEngine
 
         private void SearchMTCS()
         {
+            var mcts = new MonteCarloTreeSearch(_board);
+            Console.WriteLine("CanSearchDeeperMTCS " + CanSearchDeeperMTCS());
             while (CanSearchDeeperMTCS())
             {
+                Console.WriteLine("searchhing1");
+                mcts.CreatingMCTStree();
+                Console.WriteLine("searchhing2");
                 _time.StartInterval();
-                _search.SearchDeeperMTCS(_time.CheckTimeBudget);
-
+                //_search.SearchDeeperMTCS();
+                //mcts.findNextMove();
                 //aborted? NEED TO CHECK THIS FOR MTCS
-                if (_search.Aborted)
-                    break;
+                /*if (_search.Aborted)
+                    break;*/
 
                 //collect PV
-                Collect();
+                //Collect();
+                Console.WriteLine("searchhing3");
             }
             //Done searching!
+            _best = mcts.ResultOfMTCStree();
             Uci.BestMove(_best);
             _search = null;
         }

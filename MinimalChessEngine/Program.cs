@@ -126,8 +126,11 @@ namespace MinimalChessEngine
             else
             {
                 //Searching infinite within optional constraints
-                _engine.Go(maxDepth, maxTime, maxNodes);
+                //_engine.Go(maxDepth, maxTime, maxNodes);
+                Console.WriteLine("mcts started");
+                _engine.GoMTCS(maxTime);
             }
+
         }
 
         private static bool TryParse(string[] tokens, string name, out int value, int defaultValue = 0)

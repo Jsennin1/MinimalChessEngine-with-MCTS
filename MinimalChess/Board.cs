@@ -328,7 +328,52 @@ namespace MinimalChess
             if (IsActivePiece(_state[square]))
                 AddCaptures(square, moveHandler);
         }
-
+        public (int whitePoint, int blackPoint) GiveTotalPiecePoints()
+        {
+            int totalW = 0, totalB = 0;
+            for (int square = 0; square < 64; square++)
+                if (IsActivePiece(_state[square]) || IsOpponentPiece(_state[square])) 
+                {
+                    switch (_state[square])
+                    {
+                        case Piece.BlackPawn:
+                            totalB++;
+                            break;
+                        case Piece.WhitePawn:
+                            totalW++;
+                            break;
+                        case Piece.BlackKing:                            
+                            break;
+                        case Piece.WhiteKing:                            
+                            break;
+                        case Piece.BlackKnight:
+                            totalB =+ 3;
+                            break;
+                        case Piece.WhiteKnight:
+                            totalB = +3;
+                            break;
+                        case Piece.BlackRook:
+                            totalB = +5;
+                            break;
+                        case Piece.WhiteRook:
+                            totalB = +5;
+                            break;
+                        case Piece.BlackBishop:
+                            totalB = +3;
+                            break;
+                        case Piece.WhiteBishop:
+                            totalB = +3;
+                            break;
+                        case Piece.BlackQueen:
+                            totalB = +9;
+                            break;
+                        case Piece.WhiteQueen:
+                            totalB = +9;
+                            break;
+                    }
+                }
+            return (totalW,totalB);
+        }
         private void AddQuiets(int square, Action<Move> moveHandler)
         {
             switch (_state[square])
