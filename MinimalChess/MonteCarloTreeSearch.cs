@@ -34,30 +34,32 @@ namespace MinimalChess
 
         public void CreatingMCTStree()
         {
-            Console.WriteLine("mcts");
+            Console.WriteLine("mcts " + DateTime.Now.ToString("hh.mm.ss.ffffff"));
             Node promisingNode = selectPromisingNode(rootNode);
-            Console.WriteLine("mcts1");
+            Console.WriteLine("mcts1 " + DateTime.Now.ToString("hh.mm.ss.ffffff"));
 
             if (promisingNode.getState().CheckStatus())
             {
                 expandNode(promisingNode);
-                Console.WriteLine("mcts2");
+                Console.WriteLine("mcts2 " + DateTime.Now.ToString("hh.mm.ss.ffffff"));
 
             }
             Node nodeToExplore = promisingNode;
             if (promisingNode.getChildArray().Count > 0)
             {
-                Console.WriteLine("mcts3");
+                Console.WriteLine("mcts3 " + DateTime.Now.ToString("hh.mm.ss.ffffff"));
 
                 nodeToExplore = promisingNode.getRandomChildNode();
+                Console.WriteLine("nodetoExplore " + nodeToExplore.getState().getMove());
             }
-            Console.WriteLine("mcts4");
+            Console.WriteLine("mcts4 " + DateTime.Now.ToString("hh.mm.ss.ffffff"));
 
             Color playoutResult = simulateRandomPlayout(nodeToExplore);
-            Console.WriteLine("mcts5");
+            Console.WriteLine("playoutResult " + playoutResult);
+            Console.WriteLine("mcts5 " + DateTime.Now.ToString("hh.mm.ss.ffffff"));
 
             backPropogation(nodeToExplore, playoutResult);
-            Console.WriteLine("mcts6");
+            Console.WriteLine("mcts6 " + DateTime.Now.ToString("hh.mm.ss.ffffff") );
 
         }
 
@@ -103,19 +105,30 @@ namespace MinimalChess
             tempNode.copyStateOfNode(node);
             State tempState = tempNode.getState();
             Color boardStatus = tempState.getBoard().SideToMove;
-            if (!tempState.CheckStatus() && boardStatus != player)
+            Console.WriteLine("simulate Color 1 " + boardStatus);
+            if (!tempState.CheckStatus())
             {
-                tempNode.getParent().getState().setWinScore(int.MinValue);
-                return player;
+                Console.WriteLine("inside if ");
+
+                if (boardStatus != player) {
+                    //tempNode.getParent().getState().setWinScore(int.MinValue);
+                    return player;
+                }
+                else
+                {
+                    return opponent;
+                }
+                
             }
             while (tempState.CheckStatus() && playoutCount < maxPlayOutCount)
             {
                 playoutCount++;
                 //tempState.togglePlayer();
                 tempState.randomPlay();
+                Console.WriteLine("randomPlay " + tempState.getMove() + "    "+ DateTime.Now.ToString("hh.mm.ss.ffffff"));
             }
             //dusman hareket edemiyorsa draw olabilir
-            if(playoutCount < maxPlayOutCount)
+            if (playoutCount < maxPlayOutCount)
                 return tempState.getBoard().SideToMove == player ? opponent : player;
             int whitePoint=0, blackPoint =0;
 

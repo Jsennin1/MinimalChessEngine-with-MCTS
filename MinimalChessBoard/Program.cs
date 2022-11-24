@@ -169,7 +169,9 @@ namespace MinimalChessBoard
             Move[] line = search.PrincipalVariation;
 
             int i = 1;
-            foreach (var move in new LegalMoves(board))
+            var moves = new LegalMoves(board);
+            Console.WriteLine("moves count " + moves.Count);
+            foreach (var move in moves)
             {
                 if (line != null && line.Length > 0 && line[0] == move)
                 {

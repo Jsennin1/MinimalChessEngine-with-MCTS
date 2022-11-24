@@ -61,19 +61,29 @@ namespace MinimalChess
         }
 
         // copy constructor, getters, and setters
-        private static List<Move> ListMoves(Board board, int depth = 0)
+        public List<Move> ListMoves(Board board, int depth = 0)
         {
             IterativeSearch search = new IterativeSearch(depth, board);
             Move[] line = search.PrincipalVariation;
 
-            return new LegalMoves(board);
+            var moves = new LegalMoves(board);
+            return moves;
           
         }
         public bool CheckStatus() 
         {
             List<Move> possibleMoves = ListMoves(board);
-            if(possibleMoves.Count < 5)
-            Console.WriteLine("possibleMoves.Count " + possibleMoves.Count);
+            Console.WriteLine("simulate Color 2 " + board.SideToMove);
+            if (possibleMoves.Count == 1)
+            {
+                Console.WriteLine($"OnlyMove {possibleMoves[0]}");
+                Console.WriteLine("possibleMoves.Count " + possibleMoves.Count);
+            }
+            else if (possibleMoves.Count == 0) 
+            {
+                Console.WriteLine("possibleMoves.Count " + possibleMoves.Count);
+            }
+
 
             if (possibleMoves.Count > 0) return true;
             else return false;

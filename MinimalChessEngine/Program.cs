@@ -128,7 +128,7 @@ namespace MinimalChessEngine
                 //Searching infinite within optional constraints
                 //_engine.Go(maxDepth, maxTime, maxNodes);
                 Console.WriteLine("mcts started");
-                _engine.GoMTCS(maxTime);
+                _engine.GoMTCS(maxTime -1000);
             }
 
         }
